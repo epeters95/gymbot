@@ -1,0 +1,2 @@
+# gymbot
+GymRats discord bot
