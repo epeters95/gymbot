@@ -79,6 +79,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 // Receive notifications from Telegram
 
+const DEFAULT_NOTIF_TITLE = 'Glizziator club';
+
 console.log('Starting Telegram bot...');
 
 const bot = new Telegraf(process.env.API_TOKEN);
@@ -99,16 +101,30 @@ bot.on(message('text'), async (ctx) => {
 		const channel = await client.channels.fetch(CHANNEL_ID);
 		if (channel) {
 
-			// Check for monthly or weekly win
-			if (msg.title === 'Glizziator club' || TEST_MODE) {
-				
+			let username;
+			let isWeeklyWin = false;
+			let isMonthlyWin = false;
+			let messageText = msg.message;
+
+			if (msg.title === DEFAULT_NOTIF_TITLE) {
+
+				// Check for monthly or weekly win
 				// Check for discord handle in registry
 				let msgSplit = msg.message.split(' has won the ');
-				let username = msgSplit[0];
-				let isWeeklyWin = msgSplit[1].includes('week');
-				let isMonthlyWin = msgSplit[1].includes('month');
+				username = msgSplit[0];
+				isWeeklyWin = msgSplit[1].includes('week');
+				isMonthlyWin = msgSplit[1].includes('month');
+			}
+			else if (TEST_MODE) {
 				
+				username = msg.title;
+
+			}
+
+			// Replace the username with the @ handle
+			if (username) {
 				let userHandle = username;
+				
 				for (const userId in gymrats) {
 
 					if (gymrats[userId].gymratsName === username) {
@@ -135,10 +151,19 @@ bot.on(message('text'), async (ctx) => {
 						break;
 					}
 				}
-				// Send channel announcement
-				channel.send(msg.message.replace(username, userHandle));
+				messageText = messageText.replace(username, userHandle);
+				
+				// Username in title, add to message text
+				if (msg.title !== DEFAULT_NOTIF_TITLE) {
+					messageText = `${userHandle} - ${messageText}`;
+				}
 			}
-		
+
+			// Send channel announcement
+			if (msg.title === DEFAULT_NOTIF_TITLE || TEST_MODE) {
+				channel.send(messageText);
+			}
+			
 		} else {
 			console.error('Server channel not found');
 		}
