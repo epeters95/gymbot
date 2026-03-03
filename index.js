@@ -84,12 +84,10 @@ const DEFAULT_NOTIF_TITLE = 'Glizziator club';
 console.log('Starting Telegram bot...');
 
 const bot = new Telegraf(process.env.API_TOKEN);
-bot.telegram.getMe().then((botInfo) => {
-	bot.options.username = botInfo.username
-})
+
 bot.start((ctx) => ctx.reply('GymBot started'));
 
-bot.on(message('text'), async (ctx) => {
+bot.on('message', async (ctx) => {
 
 	const messageBody = ctx.message.text?.replace('\t', '');
     console.log(`Received message from Telegram: ${messageBody}`);
