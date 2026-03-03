@@ -29,22 +29,6 @@ commands.forEach((el) => {
     console.log(`Added command ${JSON.stringify(el)}`);
 })
 
-// Get guild and client ids
-// const CONFIG_PATH = "config.json";
-// const config = Object.create(null);
-// try {
-//     Object.assign(config, JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')))
-// } catch (error) {
-//     console.error(`Empty or invalid ${CONFIG_PATH}: `, error);
-//     return;
-// }
-
-// if (config.guildId === undefined || config.clientId === undefined) {
-//     console.error(`Config missing guild/client id, quitting`);
-//     return;
-// }
-// const guildId = config.guildId;
-// const clientId = config.clientId;
 
 console.log(`Success with ${guildId} and ${clientId}`)
 // Construct and prepare an instance of the REST module
