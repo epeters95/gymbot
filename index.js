@@ -1,5 +1,4 @@
-const { Telegraf } = require('telegraf');
-const { message } = require('telegraf/filters');
+const tdl = require('tdl');
 const dotenv = require('dotenv');
 dotenv.config();
 const fs = require('node:fs');
@@ -8,7 +7,7 @@ const { Client, Collection, Events, GatewayIntentBits, MessageFlags } = require(
 
 const TEST_MODE = true;
 
-// User registry
+// User registry setup
 
 const GYMRATS_PATH = "gymrats.json";
 
@@ -22,18 +21,18 @@ try {
 
 // Set up Discord client and commands
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const discordClient = new Client({ intents: [GatewayIntentBits.Guilds] });
 console.log('Attempting connection...');
 
-client.once(Events.ClientReady, (readyClient) => {
+discordClient.once(Events.ClientReady, (readyClient) => {
 	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
 });
-client.login(process.env.DISCORD_TOKEN);
+discordClient.login(process.env.DISCORD_TOKEN);
 
 const CHANNEL_ID = process.env.CHANNEL_ID;
 
 
-client.commands = new Collection();
+discordClient.commands = new Collection();
 const foldersPath = path.join(__dirname, 'commands');
 const commandFolders = fs.readdirSync(foldersPath);
 for (const folder of commandFolders) {
@@ -44,14 +43,14 @@ for (const folder of commandFolders) {
 		const command = require(filePath);
 		// Set a new item in the Collection with the key as the command name and the value as the exported module
 		if ('data' in command && 'execute' in command) {
-			client.commands.set(command.data.name, command);
+			discordClient.commands.set(command.data.name, command);
 		} else {
 			console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
 		}
 	}
 }
 
-client.on(Events.InteractionCreate, async (interaction) => {
+discordClient.on(Events.InteractionCreate, async (interaction) => {
 	if (!interaction.isChatInputCommand()) return;
 	const command = interaction.client.commands.get(interaction.commandName);
 	if (!command) {
@@ -81,22 +80,35 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 const DEFAULT_NOTIF_TITLE = 'Glizziator club';
 
-console.log('Starting Telegram bot...');
+console.log('Starting Telegram App...');
 
-const bot = new Telegraf(process.env.API_TOKEN);
+const tdlClient = tdl.createClient({
+	apiId: process.env.API_ID,
+	apiHash: process.env.API_HASH
+});
 
-bot.start((ctx) => ctx.reply('GymBot started'));
+tdlClient.on('error', console.error);
 
-bot.on('message', async (ctx) => {
+// Receive updates from TDLib
+tdlClient.on('update', (update) => {
 
-	const messageBody = ctx.message.text?.replace('\t', '');
+	console.log('Received update:', update)
+});
+
+await tdlClient.login();
+
+tdlClient.on('update', handleMessageUpdate);
+
+async function handleMessageUpdate(update) {
+	console.log('New update:', update);
+	const messageBody = update.message?.content?.replace('\t', '');
     console.log(`Received message from Telegram: ${messageBody}`);
 	try {
 		const msg = JSON.parse(messageBody);
 		console.log(`Parsed JSON`);
 		
 		// Send to discord
-		const channel = await client.channels.fetch(CHANNEL_ID);
+		const channel = await discordClient.channels.fetch(CHANNEL_ID);
 		if (channel) {
 
 			let username;
@@ -168,10 +180,9 @@ bot.on('message', async (ctx) => {
 	} catch(error) {
 		console.error(`Error parsing JSON: ${messageBody}`, error)
 	}
-});
+}
 
-bot.launch()
 
 // Enable graceful stop
-process.once('SIGINT', () => bot.stop('SIGINT'))
-process.once('SIGTERM', () => bot.stop('SIGTERM'))
+process.once('SIGINT', () => tdlClient.close())
+process.once('SIGTERM', () => tdlClient.close())
