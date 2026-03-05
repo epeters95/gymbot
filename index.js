@@ -1,4 +1,5 @@
 const tdl = require('tdl');
+tdl.configure({ tdjson: '/usr/local/lib/libtdjson.so' })
 const dotenv = require('dotenv');
 dotenv.config();
 const fs = require('node:fs');
@@ -78,111 +79,110 @@ discordClient.on(Events.InteractionCreate, async (interaction) => {
 
 // Receive notifications from Telegram
 
-const DEFAULT_NOTIF_TITLE = 'Glizziator club';
-
-console.log('Starting Telegram App...');
-
 const tdlClient = tdl.createClient({
 	apiId: process.env.API_ID,
 	apiHash: process.env.API_HASH
 });
+const DEFAULT_NOTIF_TITLE = 'Glizziator club';
 
-tdlClient.on('error', console.error);
+async function runTgApp() {
 
-// Receive updates from TDLib
-tdlClient.on('update', (update) => {
+	console.log('Starting Telegram App...');
 
-	console.log('Received update:', update)
-});
 
-await tdlClient.login();
+	tdlClient.on('error', console.error);
 
-tdlClient.on('update', handleMessageUpdate);
+	// Receive updates from TDLib
 
-async function handleMessageUpdate(update) {
-	console.log('New update:', update);
-	const messageBody = update.message?.content?.replace('\t', '');
-    console.log(`Received message from Telegram: ${messageBody}`);
-	try {
-		const msg = JSON.parse(messageBody);
-		console.log(`Parsed JSON`);
-		
-		// Send to discord
-		const channel = await discordClient.channels.fetch(CHANNEL_ID);
-		if (channel) {
+	await tdlClient.login();
 
-			let username;
-			let isWeeklyWin = false;
-			let isMonthlyWin = false;
-			let messageText = msg.message;
+	tdlClient.on('update', handleMessageUpdate);
 
-			if (msg.title === DEFAULT_NOTIF_TITLE) {
+	async function handleMessageUpdate(update) {
+		let messageBody = update.message?.content?.text?.text ?? '';
+		try {
+			messageBody = messageBody.replace('\t', '');
+			const msg = JSON.parse(messageBody);
+			console.log(`Parsed message from Telegram: ${JSON.stringify(msg)}`);
 
-				// Check for monthly or weekly win
-				// Check for discord handle in registry
-				let msgSplit = msg.message.split(' has won the ');
-				username = msgSplit[0];
-				isWeeklyWin = msgSplit[1].includes('week');
-				isMonthlyWin = msgSplit[1].includes('month');
-			}
-			else if (TEST_MODE) {
-				
-				username = msg.title;
+			// Send to discord
+			const channel = await discordClient.channels.fetch(CHANNEL_ID);
+			if (channel) {
 
-			}
+				let username;
+				let isWeeklyWin = false;
+				let isMonthlyWin = false;
+				let messageText = msg.message;
 
-			// Replace the username with the @ handle
-			if (username) {
-				let userHandle = username;
-				
-				for (const userId in gymrats) {
+				if (msg.title === DEFAULT_NOTIF_TITLE) {
 
-					if (gymrats[userId].gymratsName === username) {
-						
-						// Use @ mention and track stats
-						userHandle = `<@${userId}>`;
-						if (isWeeklyWin) {
-							gymrats[userId].wins_weekly += 1;
+					// Check for monthly or weekly win
+					// Check for discord handle in registry
+					let msgSplit = msg.message.split(' has won the ');
+					username = msgSplit[0];
+					isWeeklyWin = msgSplit[1].includes('week');
+					isMonthlyWin = msgSplit[1].includes('month');
+				}
+				else if (TEST_MODE) {
+					
+					username = msg.title;
+
+				}
+
+				// Replace the username with the @ handle
+				if (username) {
+					let userHandle = username;
+					
+					for (const userId in gymrats) {
+
+						if (gymrats[userId].gymratsName === username) {
+							
+							// Use @ mention and track stats
+							userHandle = `<@${userId}>`;
+							if (isWeeklyWin) {
+								gymrats[userId].wins_weekly += 1;
+							}
+							if (isMonthlyWin) {
+								gymrats[userId].wins_monthly += 1;
+							}
+
+							// save json
+							try {
+								await fs.promises.writeFile(
+									GYMRATS_PATH,
+									JSON.stringify(gymrats, null, 4),
+									'utf8'
+								);
+							} catch(error) {
+								console.error(`Error saving JSON: `, error);
+							}						
+							break;
 						}
-						if (isMonthlyWin) {
-							gymrats[userId].wins_monthly += 1;
-						}
-
-						// save json
-						try {
-							await fs.promises.writeFile(
-								GYMRATS_PATH,
-								JSON.stringify(gymrats, null, 4),
-								'utf8'
-							);
-						} catch(error) {
-							console.error(`Error saving JSON: `, error);
-						}						
-						break;
+					}
+					messageText = messageText.replace(username, userHandle);
+					
+					// Username in title, add to message text
+					if (msg.title !== DEFAULT_NOTIF_TITLE) {
+						messageText = `${userHandle} - ${messageText}`;
 					}
 				}
-				messageText = messageText.replace(username, userHandle);
-				
-				// Username in title, add to message text
-				if (msg.title !== DEFAULT_NOTIF_TITLE) {
-					messageText = `${userHandle} - ${messageText}`;
-				}
-			}
 
-			// Send channel announcement
-			if (msg.title === DEFAULT_NOTIF_TITLE || TEST_MODE) {
-				channel.send(messageText);
+				// Send channel announcement
+				if (msg.title === DEFAULT_NOTIF_TITLE || TEST_MODE) {
+					channel.send(messageText);
+				}
+				
+			} else {
+				console.error('Server channel not found');
 			}
-			
-		} else {
-			console.error('Server channel not found');
+		} catch(error) {
+			console.log(`Skipping telegram message without JSON: ${messageBody}`)
 		}
-	} catch(error) {
-		console.error(`Error parsing JSON: ${messageBody}`, error)
 	}
+
 }
 
+runTgApp().catch(console.error);
 
-// Enable graceful stop
-process.once('SIGINT', () => tdlClient.close())
+process.once('SIGINT',  () => tdlClient.close())
 process.once('SIGTERM', () => tdlClient.close())

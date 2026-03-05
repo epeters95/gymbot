@@ -2,3 +2,7 @@ node_modules
 gymrats.json
 config.json
 .env
+db.sqlite
+db.sqlite-shm
+db.sqlite-wal
+td.binlog
