@@ -6,6 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, Events, GatewayIntentBits, MessageFlags } = require('discord.js');
 
+// When test mode is enabled, all GymRats notifications will be sent to the channel
 const TEST_MODE = true;
 
 // User registry setup
@@ -114,6 +115,8 @@ async function runTgApp() {
 				let isMonthlyWin = false;
 				let messageText = msg.message;
 
+				// TODO: track workout occurrence in regular posts
+
 				if (msg.title === DEFAULT_NOTIF_TITLE) {
 
 					// Check for monthly or weekly win
@@ -124,7 +127,8 @@ async function runTgApp() {
 					isMonthlyWin = msgSplit[1].includes('month');
 				}
 				else if (TEST_MODE) {
-					
+
+					// Regular workout posts include username as title
 					username = msg.title;
 
 				}
@@ -173,6 +177,7 @@ async function runTgApp() {
 				}
 				
 			} else {
+				// TODO: re-check in case of throttling or bad response
 				console.error('Server channel not found');
 			}
 		} catch(error) {
