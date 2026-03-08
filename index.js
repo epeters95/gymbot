@@ -114,10 +114,11 @@ async function runTgApp() {
 				let isWeeklyWin = false;
 				let isMonthlyWin = false;
 				let messageText = msg.message;
+				let isAnnouncement = (msg.title === DEFAULT_NOTIF_TITLE);
 
 				// TODO: track workout occurrence in regular posts
 
-				if (msg.title === DEFAULT_NOTIF_TITLE) {
+				if (isAnnouncement) {
 
 					// Check for monthly or weekly win
 					// Check for discord handle in registry
@@ -126,7 +127,7 @@ async function runTgApp() {
 					isWeeklyWin = msgSplit[1].includes('week');
 					isMonthlyWin = msgSplit[1].includes('month');
 				}
-				else if (TEST_MODE) {
+				else {
 
 					// Regular workout posts include username as title
 					username = msg.title;
@@ -134,7 +135,7 @@ async function runTgApp() {
 				}
 
 				// Replace the username with the @ handle
-				if (username) {
+				if (isAnnouncement || TEST_MODE) {
 					let userHandle = username;
 					
 					for (const userId in gymrats) {
@@ -166,15 +167,13 @@ async function runTgApp() {
 					messageText = messageText.replace(username, userHandle);
 					
 					// Username in title, add to message text
-					if (msg.title !== DEFAULT_NOTIF_TITLE) {
+					if (!isAnnouncement) {
 						messageText = `${userHandle} - ${messageText}`;
 					}
-				}
-
-				// Send channel announcement
-				if (msg.title === DEFAULT_NOTIF_TITLE || TEST_MODE) {
+					// Send channel announcement
 					channel.send(messageText);
 				}
+
 				
 			} else {
 				// TODO: re-check in case of throttling or bad response
