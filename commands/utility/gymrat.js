@@ -21,8 +21,8 @@ module.exports = {
                 gymratsName: gymratsName,
                 wins_weekly: 0,
                 wins_monthly: 0,
-                added: new Date().toDateString()
-                // TODO: track more shit
+                added: new Date().toDateString(),
+                workouts: []
             }
         }
 

@@ -126,6 +126,28 @@ async function runTgApp() {
 					// Regular workout posts include username as title
 					username = msg.title;
 
+					// Track workout for registered users
+					for (const userId in gymrats) {
+						if (gymrats[userId].gymratsName === username) {
+							if (!gymrats[userId].workouts) {
+								gymrats[userId].workouts = [];
+							}
+							gymrats[userId].workouts.push({
+								received: msg.received,
+								workout: msg.message
+							});
+							try {
+								await fs.promises.writeFile(
+									GYMRATS_PATH,
+									JSON.stringify(gymrats, null, 4),
+									'utf8'
+								);
+							} catch(error) {
+								console.error(`Error saving JSON: `, error);
+							}
+							break;
+						}
+					}
 				}
 
 				// Replace the username with the @ handle
