@@ -10,11 +10,12 @@ module.exports = {
                 .addStringOption((option) => option.setName('name').setDescription('Your name on GymRats (exact, case-sensitive)').setRequired(true)),
 
     async execute(interaction) {
-        // Save to list
-        if (gymrats[interaction.user.id] === undefined) {
+        const gymratsName = interaction.options.getString('name') ?? 'unnamed';
+        const isUpdate = gymrats[interaction.user.id] !== undefined;
 
-            const gymratsName = interaction.options.getString('name') ?? 'unnamed';
-
+        if (isUpdate) {
+            gymrats[interaction.user.id].gymratsName = gymratsName;
+        } else {
             gymrats[interaction.user.id] = {
                 name: interaction.user.name,
                 gymratsName: gymratsName,
@@ -23,16 +24,21 @@ module.exports = {
                 added: new Date().toDateString()
                 // TODO: track more shit
             }
-            await fs.promises.writeFile(
-                GYMRATS_PATH,
-                JSON.stringify(gymrats, null, 4),
-                'utf8',
-            );
-
-            await interaction.reply({
-                content: `${gymratsName} linked to <@${interaction.user.id}>. To complete registration, do 20 push-ups.`,
-                // flags: MessageFlags.Ephemeral  // Only visible to you
-            });
         }
+
+        await fs.promises.writeFile(
+            GYMRATS_PATH,
+            JSON.stringify(gymrats, null, 4),
+            'utf8',
+        );
+
+        const message = isUpdate
+            ? `Updated GymRats name to ${gymratsName} for <@${interaction.user.id}>.`
+            : `${gymratsName} linked to <@${interaction.user.id}>. To complete registration, do 20 push-ups.`;
+
+        await interaction.reply({
+            content: message,
+            // flags: MessageFlags.Ephemeral  // Only visible to you
+        });
     }
 }
