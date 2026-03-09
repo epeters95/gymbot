@@ -11,15 +11,7 @@ const TEST_MODE = true;
 
 // User registry setup
 
-const GYMRATS_PATH = "gymrats.json";
-
-const gymrats = Object.create(null);
-try {
-	fs.writeFile(GYMRATS_PATH, "{}", { flag: 'wx' }, () => {});
-	Object.assign(gymrats, JSON.parse(fs.readFileSync(GYMRATS_PATH, 'utf8')))
-} catch (error) {
-	console.log(`Error importing ${GYMRATS_PATH}`);
-}
+const { gymrats, GYMRATS_PATH } = require('./gymrats');
 
 // Set up Discord client and commands
 
@@ -124,8 +116,10 @@ async function runTgApp() {
 					// Check for discord handle in registry
 					let msgSplit = msg.message.split(' has won the ');
 					username = msgSplit[0];
-					isWeeklyWin = msgSplit[1].includes('week');
-					isMonthlyWin = msgSplit[1].includes('month');
+					if (msgSplit.length > 1) {
+						isWeeklyWin = msgSplit[1].includes('week');
+						isMonthlyWin = msgSplit[1].includes('month');
+					}
 				}
 				else {
 

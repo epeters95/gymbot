@@ -1,15 +1,7 @@
 const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const fs = require('node:fs');
 
-const GYMRATS_PATH = "gymrats.json";
-
-const gymrats = Object.create(null);
-try {
-    fs.writeFile(GYMRATS_PATH, "{}", { flag: 'wx' }, () => {});
-    Object.assign(gymrats, JSON.parse(fs.readFileSync(GYMRATS_PATH, 'utf8')))
-} catch (error) {
-    console.log(`Error importing ${GYMRATS_PATH}`);
-}
+const { gymrats, GYMRATS_PATH } = require('../../gymrats');
 
 module.exports = {
     data: new SlashCommandBuilder()
