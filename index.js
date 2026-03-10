@@ -11,7 +11,7 @@ const TEST_MODE = true;
 
 // User registry setup
 
-const { gymrats, GYMRATS_PATH } = require('./gymrats');
+const { addWinToGymrat, addWorkoutToGymrat, getUserIdFor } = require('./gymrats');
 
 // Set up Discord client and commands
 
@@ -106,9 +106,8 @@ async function runTgApp() {
 				let isWeeklyWin = false;
 				let isMonthlyWin = false;
 				let messageText = msg.message;
+				let received = msg.received;
 				let isAnnouncement = (msg.title === DEFAULT_NOTIF_TITLE);
-
-				// TODO: track workout occurrence in regular posts
 
 				if (isAnnouncement) {
 
@@ -125,72 +124,42 @@ async function runTgApp() {
 
 					// Regular workout posts include username as title
 					username = msg.title;
+				}
 
-					// Track workout for registered users
-					for (const userId in gymrats) {
-						if (gymrats[userId].gymratsName === username) {
-							if (!gymrats[userId].workouts) {
-								gymrats[userId].workouts = [];
-							}
-							gymrats[userId].workouts.push({
-								received: msg.received,
-								workout: msg.message
-							});
-							try {
-								await fs.promises.writeFile(
-									GYMRATS_PATH,
-									JSON.stringify(gymrats, null, 4),
-									'utf8'
-								);
-							} catch(error) {
-								console.error(`Error saving JSON: `, error);
-							}
-							break;
-						}
+				// Get user's discord handle if registered
+				
+				let userId = getUserIdFor(username);
+				let userHandle = userId ? `<@${userId}>` : username;
+				messageText = messageText.replace(username, userHandle);
+
+				if (userId) {
+					// For now, only track registered users
+
+					if (isAnnouncement) {
+						addWinToGymrat(userId, isWeeklyWin, isMonthlyWin, received, () => {
+							console.log(`Added ${isWeeklyWin ? 'weekly' : 'monthly'} win to user ${username} at ${received}`);
+						});
+					}
+					else {
+						let workout = msg.message;
+
+						addWorkoutToGymrat(userId, workout, received, () => {
+							console.log(`Added workout ${workout} to user ${username} at ${received}`);
+						});
 					}
 				}
 
-				// Replace the username with the @ handle
+				// Send discord channel update
+
 				if (isAnnouncement || TEST_MODE) {
-					let userHandle = username;
-					
-					for (const userId in gymrats) {
-
-						if (gymrats[userId].gymratsName === username) {
-							
-							// Use @ mention and track stats
-							userHandle = `<@${userId}>`;
-							if (isWeeklyWin) {
-								gymrats[userId].wins_weekly += 1;
-							}
-							if (isMonthlyWin) {
-								gymrats[userId].wins_monthly += 1;
-							}
-
-							// save json
-							try {
-								await fs.promises.writeFile(
-									GYMRATS_PATH,
-									JSON.stringify(gymrats, null, 4),
-									'utf8'
-								);
-							} catch(error) {
-								console.error(`Error saving JSON: `, error);
-							}						
-							break;
-						}
-					}
-					messageText = messageText.replace(username, userHandle);
 					
 					// Username in title, add to message text
 					if (!isAnnouncement) {
 						messageText = `${userHandle} - ${messageText}`;
 					}
-					// Send channel announcement
 					channel.send(messageText);
 				}
 
-				
 			} else {
 				// TODO: re-check in case of throttling or bad response
 				console.error('Server channel not found');

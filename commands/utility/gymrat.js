@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const fs = require('node:fs');
 
-const { gymrats, GYMRATS_PATH } = require('../../gymrats');
+const { gymrats, exportJson } = require('../../gymrats');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -26,11 +26,7 @@ module.exports = {
             }
         }
 
-        await fs.promises.writeFile(
-            GYMRATS_PATH,
-            JSON.stringify(gymrats, null, 4),
-            'utf8',
-        );
+        exportJson();
 
         const message = isUpdate
             ? `Updated GymRats name to ${gymratsName} for <@${interaction.user.id}>.`
