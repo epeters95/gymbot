@@ -11,7 +11,7 @@ const TEST_MODE = true;
 
 // User registry setup
 
-const { addWinToGymrat, addWorkoutToGymrat, getUserIdFor } = require('./gymrats');
+const { addWinToGymrat, addWorkoutToGymrat, getKeyFor } = require('./gymrats');
 
 // Set up Discord client and commands
 
@@ -126,27 +126,25 @@ async function runTgApp() {
 					username = msg.title;
 				}
 
-				// Get user's discord handle if registered
-				
-				let userId = getUserIdFor(username);
-				let userHandle = userId ? `<@${userId}>` : username;
+				// Get user's key (discord userId if registered, username if not)
+
+				let key = getKeyFor(username);
+				let isRegistered = (key !== username);
+				let userHandle = isRegistered ? `<@${key}>` : username;
 				messageText = messageText.replace(username, userHandle);
 
-				if (userId) {
-					// For now, only track registered users
+				// Track all users (registered or not)
+				if (isAnnouncement) {
+					addWinToGymrat(key, isWeeklyWin, isMonthlyWin, received, () => {
+						console.log(`Added ${isWeeklyWin ? 'weekly' : 'monthly'} win to user ${username} at ${received}`);
+					});
+				}
+				else {
+					let workout = msg.message;
 
-					if (isAnnouncement) {
-						addWinToGymrat(userId, isWeeklyWin, isMonthlyWin, received, () => {
-							console.log(`Added ${isWeeklyWin ? 'weekly' : 'monthly'} win to user ${username} at ${received}`);
-						});
-					}
-					else {
-						let workout = msg.message;
-
-						addWorkoutToGymrat(userId, workout, received, () => {
-							console.log(`Added workout ${workout} to user ${username} at ${received}`);
-						});
-					}
+					addWorkoutToGymrat(key, workout, received, () => {
+						console.log(`Added workout ${workout} to user ${username} at ${received}`);
+					});
 				}
 
 				// Send discord channel update

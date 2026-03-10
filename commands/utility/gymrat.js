@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const fs = require('node:fs');
 
-const { gymrats, exportJson } = require('../../gymrats');
+const { gymrats, registerGymrat } = require('../../gymrats');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -13,20 +13,7 @@ module.exports = {
         const gymratsName = interaction.options.getString('name') ?? 'unnamed';
         const isUpdate = gymrats[interaction.user.id] !== undefined;
 
-        if (isUpdate) {
-            gymrats[interaction.user.id].gymratsName = gymratsName;
-        } else {
-            gymrats[interaction.user.id] = {
-                name: interaction.user.name,
-                gymratsName: gymratsName,
-                wins_weekly: 0,
-                wins_monthly: 0,
-                added: new Date().toDateString(),
-                workouts: []
-            }
-        }
-
-        exportJson();
+        registerGymrat(interaction.user.id, interaction.user.name, gymratsName);
 
         const message = isUpdate
             ? `Updated GymRats name to ${gymratsName} for <@${interaction.user.id}>.`
@@ -34,7 +21,7 @@ module.exports = {
 
         await interaction.reply({
             content: message,
-            // flags: MessageFlags.Ephemeral  // Only visible to you
+            flags: MessageFlags.Ephemeral  // Only visible to you
         });
     }
 }

@@ -26,22 +26,56 @@ function importJson () {
 	}
 }
 
-function getUserIdFor(username) {
-	for (const userId in gymrats) {
-		if (gymrats[userId].gymratsName === username) {
-			return userId;
+function getKeyFor(username) {
+	for (const key in gymrats) {
+		if (gymrats[key].gymratsName === username) {
+			return key;
 		}
+	}
+	// Unregistered user — use username as key
+	return username;
+}
+
+function ensureEntry(key) {
+	if (!gymrats[key]) {
+		gymrats[key] = {
+			gymratsName: key,
+			wins_weekly: 0,
+			wins_monthly: 0,
+			workouts: []
+		};
 	}
 }
 
-function addWorkoutToGymrat(userId, workout, received='', success=()=>{}) {
-
-	// Initialize array and add workout
-
-	if (!gymrats[userId].workouts) {
-		gymrats[userId].workouts = [];
+function registerGymrat(userId, discordName, gymratsName) {
+	// Check if there's an existing entry keyed by username
+	const existing = gymrats[gymratsName];
+	if (existing) {
+		delete gymrats[gymratsName];
+		gymrats[userId] = existing;
+		gymrats[userId].name = discordName;
+		gymrats[userId].gymratsName = gymratsName;
+	} else {
+		gymrats[userId] = {
+			name: discordName,
+			gymratsName: gymratsName,
+			wins_weekly: 0,
+			wins_monthly: 0,
+			added: new Date().toDateString(),
+			workouts: []
+		};
 	}
-	gymrats[userId].workouts.push({
+	exportJson();
+}
+
+function addWorkoutToGymrat(key, workout, received='', success=()=>{}) {
+
+	ensureEntry(key);
+
+	if (!gymrats[key].workouts) {
+		gymrats[key].workouts = [];
+	}
+	gymrats[key].workouts.push({
 		received: received,
 		workout: workout
 	});
@@ -50,13 +84,15 @@ function addWorkoutToGymrat(userId, workout, received='', success=()=>{}) {
 	success();
 }
 
-function addWinToGymrat(userId, isWeeklyWin, isMonthlyWin, received='', success=()=>{} ) {
+function addWinToGymrat(key, isWeeklyWin, isMonthlyWin, received='', success=()=>{} ) {
+
+	ensureEntry(key);
 
 	if (isWeeklyWin) {
-		gymrats[userId].wins_weekly += 1;
+		gymrats[key].wins_weekly += 1;
 	}
 	if (isMonthlyWin) {
-		gymrats[userId].wins_monthly += 1;
+		gymrats[key].wins_monthly += 1;
 	}
 
 	exportJson();
@@ -77,4 +113,4 @@ function exportJson() {
 
 importJson();
 
-module.exports = { addWinToGymrat, addWorkoutToGymrat, getUserIdFor, gymrats, importJson, exportJson };
+module.exports = { addWinToGymrat, addWorkoutToGymrat, getKeyFor, registerGymrat, gymrats, importJson, exportJson };
