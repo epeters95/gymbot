@@ -7,7 +7,7 @@ const path = require('node:path');
 const { Client, Collection, Events, GatewayIntentBits, MessageFlags } = require('discord.js');
 
 // When test mode is enabled, all GymRats notifications will be sent to the channel
-const TEST_MODE = true;
+const TEST_MODE = process.env.TEST_MODE === 'true';
 
 // User registry setup
 
