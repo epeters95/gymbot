@@ -1,10 +1,12 @@
-# RatBot
+![GymRats app icon small](./icon-small.png)
+
+# RatBot [![GitHub tag](https://img.shields.io/github/tag/epeters95/gymbot)](https://github.com/epeters95/gymbot/tags)
 
 Tracks GymRats group notifications and sends them to a Discord channel.
 
 ## Setup
 
-The server is hard-configured to listen to notifications via Waydroid in the following pipeline:
+The node server is hard-configured to listen to notifications via Waydroid in the following pipeline:
 
 - GymRats notification -> Waydroid -> IFTTT -> Telegram App -> **RatBot** -> Discord
 
@@ -17,6 +19,17 @@ To connect the inbound/outbound services, the following variables must be set in
     DISCORD_TOKEN=<discord app token>
     CHANNEL_ID=<discord server channel id>
 
+Telegram messages are expected to arrive in the following format:
+
+    {
+        "appname": "GymRats",
+        "title": <notification title>,
+        "message": <notification message>,
+        "received": "March 9, 2026 at 12:09AM"
+    }
+
+
+
 ### Commands
 
 `/gymrat <display name>`
@@ -24,25 +37,32 @@ To connect the inbound/outbound services, the following variables must be set in
 
 ### Configuration
 
-By default, only weekly or monthly announcements are sent to the channel. To send individual posts, set `TEST_MODE = true` and restart the server.
+By default, only weekly or monthly announcements are sent to the channel. To send individual posts, set env variable `TEST_MODE = true` and restart the node server.
 
 ### Deployment
 
-Node 22.12
+Install Node.js 22.12 via [nvm](), then run:
+
+    npm install
+    node .
 
 ## Built With
 
-  - [Raspberry Pi 500+](https://www.raspberrypi.com › products › raspberry-pi-500-plus)
+  - [Raspberry Pi 500+](https://www.raspberrypi.com/products/raspberry-pi-500-plus)
   - [Claude Code](https://www.anthropic.com/claude) - Used
     for improvements
   - [OpenAI Codex](https://openai.com/codex/) - Used for improvements
 
 ## Contributing
 
-You can submit ideas and feature requests to the fitness channel, or send a message to @EP.
+You can submit ideas and feature requests to the fitness channel or send a message to @EP.
+
+## TODO's
+
+- [ ] /leaderboard command
+- [ ] Handle discord channel fetch error (uncommon)
+- [ ] Import history to gymrats.json
 
 ## License
 
 This project is licensed under the [GNU General Public License v3](LICENSE.md)
-
-
