@@ -12,7 +12,6 @@ The node server is hard-configured to listen to notifications via Waydroid in th
 
 To connect the inbound/outbound services, the following variables must be set in `.env`:
 
-    #.env
     API_TOKEN=<telegram token>
     API_ID=<telegram app id>
     API_HASH=<telegram app hash>
@@ -41,7 +40,7 @@ By default, only weekly or monthly announcements are sent to the channel. To sen
 
 ### Deployment
 
-Install Node.js 22.12 via [nvm](), then run:
+Install Node.js 22.12 via [nvm](https://github.com/nvm-sh/nvm), then run:
 
     npm install
     node .

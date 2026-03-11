@@ -36,45 +36,55 @@ function getKeyFor(username) {
 	return username;
 }
 
-function ensureEntry(key) {
-	if (!gymrats[key]) {
-		gymrats[key] = {
-			gymratsName: key,
-			wins_weekly: 0,
-			wins_monthly: 0,
-			workouts: []
-		};
-	}
-}
+
 
 function registerGymrat(userId, discordName, gymratsName) {
 	// Check if there's an existing entry keyed by username
-	const existing = gymrats[gymratsName];
+	let key = getKeyFor(gymratsName);
+	const existing = gymrats[key];
+	
 	if (existing) {
-		delete gymrats[gymratsName];
-		gymrats[userId] = existing;
-		gymrats[userId].name = discordName;
-		gymrats[userId].gymratsName = gymratsName;
+		if (key === gymratsName) {
+			// Existing workout entries, update key and discord name		
+			delete gymrats[gymratsName];
+			gymrats[userId] = existing;
+			gymrats[userId].discordName = discordName;
+		}
+		else {
+			// Exists with ID, simply update name
+			gymrats[userId].gymratsName = gymratsName;
+		}
 	} else {
-		gymrats[userId] = {
-			name: discordName,
-			gymratsName: gymratsName,
-			wins_weekly: 0,
-			wins_monthly: 0,
-			added: new Date().toDateString(),
-			workouts: []
-		};
+		gymrats[userId] = newGymratEntry(gymratsName, discordName);
 	}
+
 	exportJson();
+}
+function ensureEntry(key) {
+	// In the case where no entry exists, key will be the gymrats name
+	if (!gymrats[key]) {
+		gymrats[key] = newGymratEntry(key);
+	}
+}
+
+function newGymratEntry(gymratsName, discordName=null) {
+	let entry = {
+		added: new Date().toDateString(),
+		gymratsName: gymratsName,
+		wins_monthly: 0,
+		wins_weekly: 0,
+		workouts: []
+	}
+	if (discordName) {
+		entry.discordName = discordName;
+	}
+	return entry;
 }
 
 function addWorkoutToGymrat(key, workout, received='', success=()=>{}) {
 
 	ensureEntry(key);
 
-	if (!gymrats[key].workouts) {
-		gymrats[key].workouts = [];
-	}
 	gymrats[key].workouts.push({
 		received: received,
 		workout: workout
@@ -96,7 +106,12 @@ function addWinToGymrat(key, isWeeklyWin, isMonthlyWin, received='', success=()=
 	}
 
 	exportJson();
-	success();
+	
+	if (!isWeeklyWin && !isMonthlyWin) {
+		console.error('Unexpected announcement message');
+	} else {
+		success();
+	}
 }
 
 function exportJson() {

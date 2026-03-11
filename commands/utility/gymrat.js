@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, MessageFlags } = require('discord.js');
-const fs = require('node:fs');
 
 const { gymrats, registerGymrat } = require('../../gymrats');
 
