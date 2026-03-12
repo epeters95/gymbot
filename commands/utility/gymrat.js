@@ -12,15 +12,18 @@ module.exports = {
         const gymratsName = interaction.options.getString('name') ?? 'unnamed';
         const isUpdate = gymrats[interaction.user.id] !== undefined;
 
-        registerGymrat(interaction.user.id, interaction.user.name, gymratsName);
+        let success = registerGymrat(interaction.user.id, interaction.user.name, gymratsName);
 
-        const message = isUpdate
-            ? `Updated GymRats name to ${gymratsName} for <@${interaction.user.id}>.`
-            : `${gymratsName} linked to <@${interaction.user.id}>. To complete registration, do 20 push-ups.`;
+        if (success) {
+            const message = isUpdate
+                ? `Updated GymRats name to ${gymratsName} for <@${interaction.user.id}>.`
+                : `${gymratsName} linked to <@${interaction.user.id}>. To complete registration, do 20 push-ups.`;
 
-        await interaction.reply({
-            content: message,
-            flags: MessageFlags.Ephemeral  // Only visible to you
-        });
+            await interaction.reply({
+                content: message,
+                flags: MessageFlags.Ephemeral  // Only visible to you
+            });
+        }
+        // else, fail quietly (don't stress user)
     }
 }

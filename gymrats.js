@@ -39,26 +39,36 @@ function getKeyFor(username) {
 
 
 function registerGymrat(userId, discordName, gymratsName) {
-	// Check if there's an existing entry keyed by username
-	let key = getKeyFor(gymratsName);
-	const existing = gymrats[key];
+
+	const isClaimed = getKeyFor(gymratsName) !== gymratsName;
+	if (isClaimed) {
+		console.error("Can't assign to name, already claimed")
+		return false;
+	}
 	
-	if (existing) {
-		if (key === gymratsName) {
-			// Existing workout entries, update key and discord name		
-			delete gymrats[gymratsName];
-			gymrats[userId] = existing;
-			gymrats[userId].discordName = discordName;
+	const isRegistered = gymrats[userId] !== undefined;
+	const existingUnclaimed = gymrats[gymratsName];
+
+	// Check if there's an existing entry keyed by username
+	// If so, assign it to the existing tag (overwrites, should be empty)
+	if (existingUnclaimed !== undefined) {
+		delete gymrats[gymratsName];
+		gymrats[userId] = existingUnclaimed;
+		gymrats[userId].discordName = discordName;
+	}
+	else {
+		if (isRegistered) {
+			// Exists with ID, simply update name
+			gymrats[userId].gymratsName = gymratsName;
 		}
 		else {
-			// Exists with ID, simply update name
-			gymrats[key].gymratsName = gymratsName;
+			gymrats[userId] = newGymratEntry(gymratsName, discordName);
 		}
-	} else {
-		gymrats[userId] = newGymratEntry(gymratsName, discordName);
 	}
 
 	exportJson();
+
+	return true;
 }
 function ensureEntry(key) {
 	// In the case where no entry exists, key will be the gymrats name
