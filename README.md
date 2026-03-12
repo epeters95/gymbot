@@ -16,9 +16,16 @@ To connect the inbound/outbound services, the following variables must be set in
     API_ID=<telegram app id>
     API_HASH=<telegram app hash>
     DISCORD_TOKEN=<discord app token>
-    CHANNEL_ID=<discord server channel id>
+    DISCORD_CLIENT_ID=<bot application id>
 
-Telegram messages are expected to arrive in the following format:
+Set ids for the server and channel to receive announcements in `config.json`:
+
+    {
+        "guildId": <discord server id>,
+        "channelId": <discord channel id>
+    }
+
+Telegram must be configured with a user app to receive the notifications. Messages are expected to arrive in the following format:
 
     {
         "appname": "GymRats",
@@ -43,7 +50,12 @@ By default, only weekly or monthly announcements are sent to the channel. To sen
 Install Node.js 22.12 via [nvm](https://github.com/nvm-sh/nvm), then run:
 
     npm install
+    node deploy-commands.js
     node .
+
+Note: `deploy-commands.js` must be run after any changes to commands.
+
+
 
 ## Built With
 

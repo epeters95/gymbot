@@ -1,6 +1,6 @@
 {
   "name": "gymbot",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Receives telegram notif via app (TDL) and sends discord message",
   "main": "index.js",
   "scripts": {

@@ -6,3 +6,5 @@ db.sqlite
 db.sqlite-shm
 db.sqlite-wal
 td.binlog
+_td_database
+_td_files

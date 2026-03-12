@@ -52,7 +52,7 @@ function registerGymrat(userId, discordName, gymratsName) {
 		}
 		else {
 			// Exists with ID, simply update name
-			gymrats[userId].gymratsName = gymratsName;
+			gymrats[key].gymratsName = gymratsName;
 		}
 	} else {
 		gymrats[userId] = newGymratEntry(gymratsName, discordName);
@@ -106,7 +106,7 @@ function addWinToGymrat(key, isWeeklyWin, isMonthlyWin, received='', success=()=
 	}
 
 	exportJson();
-	
+
 	if (!isWeeklyWin && !isMonthlyWin) {
 		console.error('Unexpected announcement message');
 	} else {

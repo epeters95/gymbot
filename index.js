@@ -2,6 +2,7 @@ const tdl = require('tdl');
 tdl.configure({ tdjson: '/usr/local/lib/libtdjson.so' })
 const dotenv = require('dotenv');
 dotenv.config();
+const { channelId } = require('./config.json');
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, Events, GatewayIntentBits, MessageFlags } = require('discord.js');
@@ -22,8 +23,6 @@ discordClient.once(Events.ClientReady, (readyClient) => {
 	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
 });
 discordClient.login(process.env.DISCORD_TOKEN);
-
-const CHANNEL_ID = process.env.CHANNEL_ID;
 
 
 discordClient.commands = new Collection();
@@ -99,7 +98,7 @@ async function runTgApp() {
 			console.log(`Parsed message from Telegram: ${JSON.stringify(msg)}`);
 
 			// Send to discord
-			const channel = await discordClient.channels.fetch(CHANNEL_ID);
+			const channel = await discordClient.channels.fetch(channelId);
 			if (channel) {
 
 				let username;
