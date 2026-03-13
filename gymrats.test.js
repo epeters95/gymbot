@@ -59,9 +59,10 @@ describe('registerGymrat', () => {
 	beforeEach(clearGymrats);
 
 	it('creates new entry for fresh user', () => {
-		registerGymrat('456', 'mike_discord', 'Mike');
+		const result = registerGymrat('456', 'mike_discord', 'Mike');
+		assert.strictEqual(result, true);
 		assert.strictEqual(gymrats['456'].gymratsName, 'Mike');
-		assert.strictEqual(gymrats['456'].name, 'mike_discord');
+		assert.strictEqual(gymrats['456'].discordName, 'mike_discord');
 		assert.strictEqual(gymrats['456'].wins_weekly, 0);
 	});
 
@@ -69,10 +70,12 @@ describe('registerGymrat', () => {
 		addWorkoutToGymrat('Mike', 'Push-ups', '2026-03-10');
 		addWinToGymrat('Mike', true, false);
 
-		registerGymrat('456', 'mike_discord', 'Mike');
+		const result = registerGymrat('456', 'mike_discord', 'Mike');
 
+		assert.strictEqual(result, true);
 		assert.strictEqual(gymrats['Mike'], undefined);
 		assert.strictEqual(gymrats['456'].gymratsName, 'Mike');
+		assert.strictEqual(gymrats['456'].discordName, 'mike_discord');
 		assert.strictEqual(gymrats['456'].workouts.length, 1);
 		assert.strictEqual(gymrats['456'].wins_weekly, 1);
 	});
@@ -81,5 +84,23 @@ describe('registerGymrat', () => {
 		registerGymrat('456', 'mike_discord', 'Mike');
 		registerGymrat('456', 'mike_discord', 'MikeG');
 		assert.strictEqual(gymrats['456'].gymratsName, 'MikeG');
+	});
+
+	it('rejects name already claimed by another user', () => {
+		registerGymrat('456', 'mike_discord', 'Mike');
+		const result = registerGymrat('789', 'other_discord', 'Mike');
+		assert.strictEqual(result, false);
+		assert.strictEqual(gymrats['789'], undefined);
+	});
+
+	it('preserves data when updating name', () => {
+		registerGymrat('456', 'mike_discord', 'Mike');
+		addWorkoutToGymrat('456', 'Push-ups', '2026-03-10');
+		addWinToGymrat('456', true, false);
+
+		registerGymrat('456', 'mike_discord', 'MikeG');
+		assert.strictEqual(gymrats['456'].gymratsName, 'MikeG');
+		assert.strictEqual(gymrats['456'].workouts.length, 1);
+		assert.strictEqual(gymrats['456'].wins_weekly, 1);
 	});
 });
