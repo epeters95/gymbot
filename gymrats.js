@@ -55,11 +55,13 @@ function registerGymrat(userId, discordName, gymratsName) {
 		delete gymrats[gymratsName];
 		gymrats[userId] = existingUnclaimed;
 		gymrats[userId].discordName = discordName;
+		gymrats[userId].added = new Date().toDateString();
 	}
 	else {
 		if (isRegistered) {
 			// Exists with ID, simply update name
 			gymrats[userId].gymratsName = gymratsName;
+			gymrats[userId].discordName = discordName;
 		}
 		else {
 			gymrats[userId] = newGymratEntry(gymratsName, discordName);
