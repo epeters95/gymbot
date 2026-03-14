@@ -93,76 +93,80 @@ async function runTgApp() {
 	async function handleMessageUpdate(update) {
 		let messageBody = update.message?.content?.text?.text ?? '';
 		try {
-			messageBody = messageBody.replace('\t', '');
-			const msg = JSON.parse(messageBody);
-			console.log(`Parsed message from Telegram: ${JSON.stringify(msg)}`);
+			messageBody = messageBody.trim();
+			if (messageBody.length > 0) {
+				const msg = JSON.parse(messageBody);
+				console.log(`Parsed message from Telegram: ${JSON.stringify(msg)}`);
 
-			// Send to discord
-			const channel = await discordClient.channels.fetch(channelId);
-			if (channel) {
+				// Send to discord
+				const channel = await discordClient.channels.fetch(channelId);
+				if (channel) {
 
-				let username;
-				let isWeeklyWin = false;
-				let isMonthlyWin = false;
-				let messageText = msg.message;
-				let received = msg.received;
-				let isAnnouncement = (msg.title === DEFAULT_NOTIF_TITLE);
+					let username;
+					let isWeeklyWin = false;
+					let isMonthlyWin = false;
+					let messageText = msg.message;
+					let received = msg.received;
+					let isAnnouncement = (msg.title === DEFAULT_NOTIF_TITLE);
 
-				if (isAnnouncement) {
+					if (isAnnouncement) {
 
-					// Check for monthly or weekly win
-					// Check for discord handle in registry
-					let msgSplit = msg.message.split(' has won the ');
-					username = msgSplit[0];
-					if (msgSplit.length > 1) {
-						isWeeklyWin = msgSplit[1].includes('week');
-						isMonthlyWin = msgSplit[1].includes('month');
+						// Check for monthly or weekly win
+						// Check for discord handle in registry
+						let msgSplit = msg.message.split(' has won the ');
+						username = msgSplit[0];
+						if (msgSplit.length > 1) {
+							isWeeklyWin = msgSplit[1].includes('week');
+							isMonthlyWin = msgSplit[1].includes('month');
+						}
 					}
-				}
-				else {
+					else {
 
-					// Regular workout posts include username as title
-					username = msg.title;
-				}
-
-				// Get user's key (discord userId if registered, username if not)
-
-				let key = getKeyFor(username);
-				let isRegistered = (key !== username);
-				let userHandle = isRegistered ? `<@${key}>` : username;
-				messageText = messageText.replace(username, userHandle);
-
-				// Track all users (registered or not)
-				if (isAnnouncement) {
-					addWinToGymrat(key, isWeeklyWin, isMonthlyWin, received, () => {
-						console.log(`Added ${isWeeklyWin ? 'weekly' : 'monthly'} win to user ${username} at ${received}`);
-					});
-				}
-				else {
-					let workout = msg.message;
-
-					addWorkoutToGymrat(key, workout, received, () => {
-						console.log(`Added workout ${workout} to user ${username} at ${received}`);
-					});
-				}
-
-				// Send discord channel update
-
-				if (isAnnouncement || TEST_MODE) {
-					
-					// Username in title, add to message text
-					if (!isAnnouncement) {
-						messageText = `${userHandle} - ${messageText}`;
+						// Regular workout posts include username as title
+						username = msg.title;
 					}
-					channel.send(messageText);
-				}
 
+					// Get user's key (discord userId if registered, username if not)
+
+					let key = getKeyFor(username);
+					let isRegistered = (key !== username);
+					let userHandle = isRegistered ? `<@${key}>` : username;
+					messageText = messageText.replace(username, userHandle);
+
+					// Track all users (registered or not)
+					if (isAnnouncement) {
+						addWinToGymrat(key, isWeeklyWin, isMonthlyWin, received, () => {
+							console.log(`Added ${isWeeklyWin ? 'weekly' : 'monthly'} win to user ${username} at ${received}`);
+						});
+					}
+					else {
+						let workout = msg.message;
+
+						addWorkoutToGymrat(key, workout, received, () => {
+							console.log(`Added workout ${workout} to user ${username} at ${received}`);
+						});
+					}
+
+					// Send discord channel update
+
+					if (isAnnouncement || TEST_MODE) {
+						
+						// Username in title, add to message text
+						if (!isAnnouncement) {
+							messageText = `${userHandle} - ${messageText}`;
+						}
+						channel.send(messageText);
+					}
+
+				} else {
+					// TODO: re-check in case of throttling or bad response
+					console.error('Server channel not found');
+				}
 			} else {
-				// TODO: re-check in case of throttling or bad response
-				console.error('Server channel not found');
+				console.log(`Skipping telegram update with no message`)
 			}
 		} catch(error) {
-			console.log(`Skipping telegram message without JSON: ${messageBody}`)
+			console.error(error);
 		}
 	}
 
